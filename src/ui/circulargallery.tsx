@@ -363,11 +363,12 @@ class Media {
         this.plane.program.uniforms.uViewportSizes.value = [this.viewport.width, this.viewport.height];
       }
     }
-    this.scale = this.screen.height / 1500;
-    this.plane.scale.y = (this.viewport.height * (900 * this.scale)) / this.screen.height;
-    this.plane.scale.x = (this.viewport.width * (700 * this.scale)) / this.screen.width;
+    // Reduced scale factor to make cards smaller
+    this.scale = this.screen.height / 1600; // Changed from 1500 to 2000
+    this.plane.scale.y = (this.viewport.height * (550 * this.scale)) / this.screen.height; // Changed from 600 to 400
+    this.plane.scale.x = (this.viewport.width * (470 * this.scale)) / this.screen.width; // Changed from 500 to 350
     this.plane.program.uniforms.uPlaneSizes.value = [this.plane.scale.x, this.plane.scale.y];
-    this.padding = 2;
+    this.padding = 1.8; // Reduced padding
     this.width = this.plane.scale.x + this.padding;
     this.widthTotal = this.width * this.length;
     this.x = this.width * this.index;

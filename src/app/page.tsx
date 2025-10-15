@@ -73,7 +73,7 @@ export default function Home() {
             transition={{ duration: 1.2, ease: "easeOut" }}
           >
             <motion.h1
-              className="text-5xl sm:text-7xl lg:text-8xl font-extrabold mb-6 leading-tight tracking-tight"
+              className="text-3xl sm:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight tracking-tight"
               animate={{ backgroundPosition: ["0%", "100%"] }}
               transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
               style={{
@@ -91,7 +91,7 @@ export default function Home() {
             </motion.h1>
 
             <motion.p
-              className="text-lg sm:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto"
+              className="text-sm sm:text-md text-gray-300 mb-10 max-w-2xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5, duration: 1 }}
@@ -108,14 +108,14 @@ export default function Home() {
               transition={{ delay: 1, duration: 1 }}
             >
               <motion.button
-                whileHover={{ scale: 1.08, y: -2 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.85 }}
                 className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-300"
               >
                 Get Started
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.08, y: -2 }}
+                whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-8 py-3 border-2 border-cyan-400 text-cyan-400 font-semibold rounded-xl hover:bg-cyan-400 hover:text-black transition-all duration-300"
               >
@@ -127,7 +127,7 @@ export default function Home() {
       </div>
               {/* Circular Gallery */}
         <h2
-          className="text-center text-4xl font-bold mb-8"
+          className="text-center text-5xl font-bold mb-8"
           style={{
             backgroundSize: "200% auto",
             backgroundImage: "linear-gradient(to right, #00ffff, #007bff, #ff00ff, #ff0066)",
