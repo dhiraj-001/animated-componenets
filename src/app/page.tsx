@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Navbar from "@/ui/navbar";
 import LightRays from "@/ui/lightraysBG";
+import CircularGallery from "@/ui/circulargallery";
 
 export default function Home() {
   const items = [
@@ -61,18 +62,6 @@ export default function Home() {
           noiseAmount={0.1}
           distortion={0.05}
           className="custom-rays"
-        />
-
-        {/* Floating Gradient Orbs */}
-        <motion.div
-          className="absolute w-96 h-96 bg-gradient-to-r from-purple-500 to-cyan-400 rounded-full filter blur-3xl opacity-20 mix-blend-screen"
-          animate={{ x: [0, 100, -100, 0], y: [0, 50, -50, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute w-80 h-80 bg-gradient-to-r from-pink-500 to-blue-500 rounded-full filter blur-3xl opacity-15 mix-blend-screen"
-          animate={{ x: [100, -80, 100], y: [-60, 60, -60] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
         />
 
         {/* Hero Content */}
@@ -136,6 +125,21 @@ export default function Home() {
           </motion.div>
         </div>
       </div>
+              {/* Circular Gallery */}
+        <h2
+          className="text-center text-4xl font-bold mb-8"
+          style={{
+            backgroundSize: "200% auto",
+            backgroundImage: "linear-gradient(to right, #00ffff, #007bff, #ff00ff, #ff0066)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          Circular Gallery
+        </h2>
+        <div style={{ height: '700px', position: 'relative' }}>
+          <CircularGallery bend={3} textColor="#00ffff" borderRadius={0.05} scrollEase={0.02}/>
+        </div>
     </>
   );
 }
