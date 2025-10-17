@@ -50,7 +50,7 @@ export default function Home() {
         ease="power3.out"
       />
 
-      <div className="relative w-full h-screen overflow-hidden bg-gradient-to-b from-black via-gray-900 to-black font-[Poppins,sans-serif]">
+      <div className="relative w-full h-screen overflow-hidden ">
         <LightRays
           raysOrigin="top-center"
           raysColor="#00ffff"

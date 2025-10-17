@@ -43,24 +43,27 @@ const getAnchorAndDir = (
   w: number,
   h: number
 ): { anchor: [number, number]; dir: [number, number] } => {
-  const outside = 0.2;
+  // Use much smaller offsets for mobile compatibility
+  const outsideX = 0.1;
+  const outsideY = 0.1;
+  
   switch (origin) {
     case 'top-left':
-      return { anchor: [0, -outside * h], dir: [0, 1] };
+      return { anchor: [-outsideX * w, -outsideY * h], dir: [0.2, 0.8] };
     case 'top-right':
-      return { anchor: [w, -outside * h], dir: [0, 1] };
+      return { anchor: [(1 + outsideX) * w, -outsideY * h], dir: [-0.2, 0.8] };
     case 'left':
-      return { anchor: [-outside * w, 0.5 * h], dir: [1, 0] };
+      return { anchor: [-outsideX * w, 0.5 * h], dir: [1, 0] };
     case 'right':
-      return { anchor: [(1 + outside) * w, 0.5 * h], dir: [-1, 0] };
+      return { anchor: [(1 + outsideX) * w, 0.5 * h], dir: [-1, 0] };
     case 'bottom-left':
-      return { anchor: [0, (1 + outside) * h], dir: [0, -1] };
+      return { anchor: [-outsideX * w, (1 + outsideY) * h], dir: [0.2, -0.8] };
     case 'bottom-center':
-      return { anchor: [0.5 * w, (1 + outside) * h], dir: [0, -1] };
+      return { anchor: [0.5 * w, (1 + outsideY) * h], dir: [0, -1] };
     case 'bottom-right':
-      return { anchor: [w, (1 + outside) * h], dir: [0, -1] };
+      return { anchor: [(1 + outsideX) * w, (1 + outsideY) * h], dir: [-0.2, -0.8] };
     default: // "top-center"
-      return { anchor: [0.5 * w, -outside * h], dir: [0, 1] };
+      return { anchor: [0.5 * w, -outsideY * h], dir: [0, 1] };
   }
 };
 
@@ -88,7 +91,27 @@ const LightRays: React.FC<LightRaysProps> = ({
   const meshRef = useRef<Mesh | null>(null);
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [dimensions, setDimensions] = useState({ width: 1, height: 1 });
   const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Monitor container dimensions
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { clientWidth, clientHeight } = containerRef.current;
+        setDimensions({ width: clientWidth, height: clientHeight });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -122,12 +145,13 @@ const LightRays: React.FC<LightRaysProps> = ({
     const initializeWebGL = async () => {
       if (!containerRef.current) return;
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Give a small delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       if (!containerRef.current) return;
 
       const renderer = new Renderer({
-        dpr: Math.min(window.devicePixelRatio, 2),
+        dpr: 1, // Use 1 for mobile compatibility
         alpha: true
       });
       rendererRef.current = renderer;
@@ -135,7 +159,9 @@ const LightRays: React.FC<LightRaysProps> = ({
       const gl = renderer.gl;
       gl.canvas.style.width = '100%';
       gl.canvas.style.height = '100%';
+      gl.canvas.style.display = 'block';
 
+      // Clear container and append canvas
       while (containerRef.current.firstChild) {
         containerRef.current.removeChild(containerRef.current.firstChild);
       }
@@ -177,8 +203,11 @@ float noise(vec2 st) {
 float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord,
                   float seedA, float seedB, float speed) {
   vec2 sourceToCoord = coord - raySource;
-  vec2 dirNorm = normalize(sourceToCoord);
-  float cosAngle = dot(dirNorm, rayRefDirection);
+  float cosAngle = dot(normalize(sourceToCoord), rayRefDirection);
+
+  // Increased minimum angle to make rays more visible on small screens
+  float angleThreshold = 0.3;
+  if (cosAngle < angleThreshold) return 0.0;
 
   float distortedAngle = cosAngle + distortion * sin(iTime * 2.0 + length(sourceToCoord) * 0.01) * 0.2;
   
@@ -188,7 +217,7 @@ float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord,
   float maxDistance = iResolution.x * rayLength;
   float lengthFalloff = clamp((maxDistance - distance) / maxDistance, 0.0, 1.0);
   
-  float fadeFalloff = clamp((iResolution.x * fadeDistance - distance) / (iResolution.x * fadeDistance), 0.5, 1.0);
+  float fadeFalloff = clamp((iResolution.x * fadeDistance - distance) / (iResolution.x * fadeDistance), 0.0, 1.0);
   float pulse = pulsating > 0.5 ? (0.8 + 0.2 * sin(iTime * speed * 3.0)) : 1.0;
 
   float baseStrength = clamp(
@@ -224,10 +253,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     fragColor.rgb *= (1.0 - noiseAmount + noiseAmount * n);
   }
 
+  // Enhanced brightness for mobile visibility
   float brightness = 1.0 - (coord.y / iResolution.y);
-  fragColor.x *= 0.1 + brightness * 0.8;
-  fragColor.y *= 0.3 + brightness * 0.6;
-  fragColor.z *= 0.5 + brightness * 0.5;
+  fragColor.rgb *= (0.7 + brightness * 0.5);
 
   if (saturation != 1.0) {
     float gray = dot(fragColor.rgb, vec3(0.299, 0.587, 0.114));
@@ -235,6 +263,9 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   }
 
   fragColor.rgb *= raysColor;
+  
+  // Ensure minimum visibility
+  fragColor.a = max(fragColor.a, 0.1);
 }
 
 void main() {
@@ -253,7 +284,7 @@ void main() {
         raysColor: { value: hexToRgb(raysColor) },
         raysSpeed: { value: raysSpeed },
         lightSpread: { value: lightSpread },
-        rayLength: { value: rayLength },
+        rayLength: { value: rayLength * 1.5 }, // Increased for mobile
         pulsating: { value: pulsating ? 1.0 : 0.0 },
         fadeDistance: { value: fadeDistance },
         saturation: { value: saturation },
@@ -276,18 +307,16 @@ void main() {
       const updatePlacement = () => {
         if (!containerRef.current || !renderer) return;
 
-        renderer.dpr = Math.min(window.devicePixelRatio, 2);
-
         const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current;
-        renderer.setSize(wCSS, hCSS);
+        
+        // Ensure minimum dimensions
+        const width = Math.max(wCSS, 100);
+        const height = Math.max(hCSS, 100);
+        
+        renderer.setSize(width, height);
+        uniforms.iResolution.value = [width, height];
 
-        const dpr = renderer.dpr;
-        const w = wCSS * dpr;
-        const h = hCSS * dpr;
-
-        uniforms.iResolution.value = [w, h];
-
-        const { anchor, dir } = getAnchorAndDir(raysOrigin, w, h);
+        const { anchor, dir } = getAnchorAndDir(raysOrigin, width, height);
         uniforms.rayPos.value = anchor;
         uniforms.rayDir.value = dir;
       };
@@ -301,10 +330,8 @@ void main() {
 
         if (followMouse && mouseInfluence > 0.0) {
           const smoothing = 0.92;
-
           smoothMouseRef.current.x = smoothMouseRef.current.x * smoothing + mouseRef.current.x * (1 - smoothing);
           smoothMouseRef.current.y = smoothMouseRef.current.y * smoothing + mouseRef.current.y * (1 - smoothing);
-
           uniforms.mousePos.value = [smoothMouseRef.current.x, smoothMouseRef.current.y];
         }
 
@@ -359,22 +386,9 @@ void main() {
         cleanupFunctionRef.current = null;
       }
     };
-  }, [
-    isVisible,
-    raysOrigin,
-    raysColor,
-    raysSpeed,
-    lightSpread,
-    rayLength,
-    pulsating,
-    fadeDistance,
-    saturation,
-    followMouse,
-    mouseInfluence,
-    noiseAmount,
-    distortion
-  ]);
+  }, [isVisible]);
 
+  // Update uniforms when props change
   useEffect(() => {
     if (!uniformsRef.current || !containerRef.current || !rendererRef.current) return;
 
@@ -384,7 +398,7 @@ void main() {
     u.raysColor.value = hexToRgb(raysColor);
     u.raysSpeed.value = raysSpeed;
     u.lightSpread.value = lightSpread;
-    u.rayLength.value = rayLength;
+    u.rayLength.value = rayLength * 1.5; // Increased for mobile
     u.pulsating.value = pulsating ? 1.0 : 0.0;
     u.fadeDistance.value = fadeDistance;
     u.saturation.value = saturation;
@@ -393,8 +407,9 @@ void main() {
     u.distortion.value = distortion;
 
     const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current;
-    const dpr = renderer.dpr;
-    const { anchor, dir } = getAnchorAndDir(raysOrigin, wCSS * dpr, hCSS * dpr);
+    const width = Math.max(wCSS, 100);
+    const height = Math.max(hCSS, 100);
+    const { anchor, dir } = getAnchorAndDir(raysOrigin, width, height);
     u.rayPos.value = anchor;
     u.rayDir.value = dir;
   }, [
@@ -429,7 +444,8 @@ void main() {
   return (
     <div
       ref={containerRef}
-      className={`w-full h-full pointer-events-none z-[3] overflow-hidden relative ${className}`.trim()}
+      className={`w-full h-full min-h-[150px] pointer-events-none z-[3] overflow-hidden relative bg-transparent ${className}`.trim()}
+      style={{ minHeight: '150px' }} // Ensure minimum height
     />
   );
 };
