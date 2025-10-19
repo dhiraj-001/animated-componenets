@@ -65,7 +65,7 @@ export default function Home() {
         />
 
         {/* Hero Content */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 px-4 sm:px-6 lg:px-8">
+        {/* <div className="absolute inset-0 flex items-center justify-center z-10 px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 50 }}
@@ -123,7 +123,7 @@ export default function Home() {
               </motion.button>
             </motion.div>
           </motion.div>
-        </div>
+        </div> */}
       </div>
               {/* Circular Gallery */}
         <h2
